@@ -1,4 +1,6 @@
 import { GetStaticPaths, GetStaticProps } from 'next';
+import { FiCalendar, FiClock, FiUser } from 'react-icons/fi';
+import Header from '../../components/Header';
 
 import { getPrismicClient } from '../../services/prismic';
 
@@ -26,9 +28,48 @@ interface PostProps {
   post: Post;
 }
 
-// export default function Post() {
-//   // TODO
-// }
+export default function Post({ post }: PostProps) {
+  return (
+    <>
+      <Header />
+      <img src="/teste.png" alt="imagem" className={styles.banner} />
+      <main className={commonStyles.container}>
+        <div className={styles.post}>
+          <div className={styles.postTop}>
+            <h1>Algum titulo de exemplo</h1>
+            <ul>
+              <li>
+                <FiCalendar />
+                26 Fev 2022
+              </li>
+              <li>
+                <FiUser />
+                Hantonny Korrea
+              </li>
+              <li>
+                <FiClock />5 min
+              </li>
+            </ul>
+          </div>
+          <article>
+            <h2>Titulo seção</h2>
+            <p>
+              Mussum Ipsum, cacilds <strong>vidis litro abertis</strong>.
+              Admodum accumsan disputationi eu sit. Vide electram sadipscing et
+              per.Paisis, filhis, espiritis santis.Posuere libero varius. Nullam
+              a nisl ut ante blandit hendrerit. Aenean sit amet nisi.A ordem dos
+              tratores não altera o pão duris.Cevadis im ampola pa arma uma
+              pindureta.Suco de cevadiss, é um leite divinis, qui tem lupuliz,
+              matis, aguis e fermentis.Sapien in monti palavris qui num
+              significa nadis i pareci latim.Em pé sem cair, deitado sem dormir,
+              <a href="/"> sentado sem cochilar e fazendo pose.</a>
+            </p>
+          </article>
+        </div>
+      </main>
+    </>
+  );
+}
 
 // export const getStaticPaths = async () => {
 //   const prismic = getPrismicClient();
