@@ -1,4 +1,13 @@
+/* eslint-disable no-return-assign */
+/* eslint-disable no-param-reassign */
+/* eslint-disable react/no-danger */
 import { GetStaticPaths, GetStaticProps } from 'next';
+import Head from 'next/head';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { useRouter } from 'next/router';
+import Prismic from '@prismicio/client';
+import { RichText } from 'prismic-dom';
 import { FiCalendar, FiClock, FiUser } from 'react-icons/fi';
 import Header from '../../components/Header';
 
@@ -28,59 +37,120 @@ interface PostProps {
   post: Post;
 }
 
-export default function Post({ post }: PostProps) {
+export default function Post({ post }: PostProps): JSX.Element {
+  const totalWords = post.data.content.reduce((total, contentItem) => {
+    total += contentItem.heading.split(' ').length;
+
+    const words = contentItem.body.map(item => item.text.split(' ').length);
+
+    words.map(word => (total += word));
+    return total;
+  }, 0);
+  const readTime = Math.ceil(totalWords / 200);
+  const router = useRouter();
+  if (router.isFallback) {
+    return <h1>Carregando...</h1>;
+  }
+  const formatedDate = format(
+    new Date(post.first_publication_date),
+    'dd MMM yyyy',
+    {
+      locale: ptBR,
+    }
+  );
+
   return (
     <>
+      <Head>
+        <title>{`${post.data.title} | spacetraveling`}</title>
+      </Head>
       <Header />
-      <img src="/teste.png" alt="imagem" className={styles.banner} />
+      <img src={post.data.banner.url} alt="imagem" className={styles.banner} />
       <main className={commonStyles.container}>
         <div className={styles.post}>
           <div className={styles.postTop}>
-            <h1>Algum titulo de exemplo</h1>
+            <h1>{post.data.title}</h1>
             <ul>
               <li>
                 <FiCalendar />
-                26 Fev 2022
+                {formatedDate}
               </li>
               <li>
                 <FiUser />
-                Hantonny Korrea
+                {post.data.author}
               </li>
               <li>
-                <FiClock />5 min
+                <FiClock />
+                {`${readTime} min`}
               </li>
             </ul>
           </div>
-          <article>
-            <h2>Titulo seção</h2>
-            <p>
-              Mussum Ipsum, cacilds <strong>vidis litro abertis</strong>.
-              Admodum accumsan disputationi eu sit. Vide electram sadipscing et
-              per.Paisis, filhis, espiritis santis.Posuere libero varius. Nullam
-              a nisl ut ante blandit hendrerit. Aenean sit amet nisi.A ordem dos
-              tratores não altera o pão duris.Cevadis im ampola pa arma uma
-              pindureta.Suco de cevadiss, é um leite divinis, qui tem lupuliz,
-              matis, aguis e fermentis.Sapien in monti palavris qui num
-              significa nadis i pareci latim.Em pé sem cair, deitado sem dormir,
-              <a href="/"> sentado sem cochilar e fazendo pose.</a>
-            </p>
-          </article>
+          {post.data.content.map(content => {
+            return (
+              <article key={content.heading}>
+                <h2>{content.heading}</h2>
+                <div
+                  className={styles.postContent}
+                  dangerouslySetInnerHTML={{
+                    __html: RichText.asHtml(content.body),
+                  }}
+                />
+              </article>
+            );
+          })}
         </div>
       </main>
     </>
   );
 }
 
-// export const getStaticPaths = async () => {
-//   const prismic = getPrismicClient();
-//   const posts = await prismic.query(TODO);
+export const getStaticPaths: GetStaticPaths = async () => {
+  const prismic = getPrismicClient();
+  const posts = await prismic.query([
+    Prismic.Predicates.at('document.type', 'posts'),
+  ]);
 
-//   // TODO
-// };
+  const paths = posts.results.map(post => {
+    return {
+      params: {
+        slug: post.uid,
+      },
+    };
+  });
 
-// export const getStaticProps = async context => {
-//   const prismic = getPrismicClient();
-//   const response = await prismic.getByUID(TODO);
+  return {
+    paths,
+    fallback: true,
+  };
+};
 
-//   // TODO
-// };
+export const getStaticProps: GetStaticProps = async context => {
+  const prismic = getPrismicClient();
+  const { slug } = context.params;
+  const response = await prismic.getByUID('posts', String(slug), {});
+
+  const post = {
+    uid: response.uid,
+    first_publication_date: response.first_publication_date,
+    data: {
+      title: response.data.title,
+      subtitle: response.data.subtitle,
+      author: response.data.author,
+      banner: {
+        url: response.data.banner.url,
+      },
+      content: response.data.content.map(content => {
+        return {
+          heading: content.heading,
+          body: [...content.body],
+        };
+      }),
+    },
+  };
+
+  return {
+    props: {
+      post,
+    },
+  };
+};

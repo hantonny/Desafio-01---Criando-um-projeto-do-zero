@@ -15,9 +15,13 @@
   span,
   a,
   ul {
+    text-align: justify;
     font-size: 1.125rem;
     line-height: 1.8;
     margin: 1.8rem 0;
+  }
+  p {
+    text-indent:2rem;
   }
 
   a {
@@ -39,12 +43,13 @@
 }
 
 .postTop {
-  > h1 {
+  >h1 {
     font-size: 3rem;
     color: var(--heading);
     margin-bottom: 1.5rem;
   }
-  > ul {
+
+  >ul {
     padding: 0;
     margin: 0;
     list-style: none;
@@ -60,7 +65,7 @@
         margin-right: 0.5rem;
       }
 
-      & + li {
+      &+li {
         margin-left: 1.625rem;
       }
     }
